@@ -3,7 +3,7 @@ export class TextBox extends Phaser.GameObjects.Text {
     private _textToWrite: string = "";
     private _arrayOfWords: string[] = [];
     private _wordIndex: number = 0;
-    private _textSpeed: number = 30;
+    private _textSpeed: number = 20;
     private _timer: Phaser.Time.TimerEvent;
     public onFinished: () => void;
     public onBreak: () => void;

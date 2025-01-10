@@ -14,7 +14,7 @@ export class MapSetup{
         map.getObjectLayer('tree1')?.objects.forEach(_o => {
             const o = _o as { x: number, y: number }
             const tree = scene.physics.add.image(o.x*7, o.y*7, 'tree1')
-            tree.setScale(7).setOrigin(0.5, 0.8).setDepth(o.y).setImmovable(true)
+            tree.setScale(7).setOrigin(0.5, 0.9).setDepth(o.y).setImmovable(true)
             tree.setTint(i%2 == 0 ? 0xeeffee : 0xffffcc)
             tree.body.setSize(15, 10).setOffset(18, 54)
             collision.push(tree.body)

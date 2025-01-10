@@ -18,6 +18,7 @@ const config: Types.Core.GameConfig = {
     physics: {
         default: 'arcade',
         arcade: {
+            tileBias: 16*7,
             debug: true
         }
     },

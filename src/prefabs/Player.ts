@@ -1,14 +1,26 @@
+import { Game } from "../scenes/Game";
 import { Weapon } from "./Weapon";
 
 export class Player extends Phaser.GameObjects.Container{
 
+    scene: Game;
     body: Phaser.Physics.Arcade.Body
     image: Phaser.GameObjects.Sprite;
+    nameText: Phaser.GameObjects.Text;
     weapon: Weapon;
+    healthBar: Phaser.GameObjects.Rectangle;
 
-    constructor(scene: Phaser.Scene, x: number, y: number){
+    speed: number = 600
+    maxHealth: number = 100
+    health: number
+    knockback: number = 0
+    knockbackDir: Phaser.Math.Vector2 = new Phaser.Math.Vector2(0,0)
+    damaged: boolean = false
+
+    constructor(scene: Game, x: number, y: number){
         super(scene, x, y);
         
+        this.scene = scene
         scene.add.existing(this)
         scene.physics.world.enable(this)
         this.setScale(7)
@@ -18,18 +30,32 @@ export class Player extends Phaser.GameObjects.Container{
 
         this.image = scene.add.sprite(0,0,'char')
 
+        const bar = scene.add.rectangle(0, -9, 20, 2, 0x777777)
+        this.healthBar = scene.add.rectangle(0, -9, 20, 2, 0x44ff55)
+
+        this.health = this.maxHealth
+
         this.weapon = new Weapon(scene)
 
-        this.add([this.image, this.weapon])
+        this.add([this.image, this.weapon, bar, this.healthBar])
     }
 
     attack(x: number, y: number){
+        if(this.scene.UI.textBox.visible) return;
+        if(this.scene.UI.inventory.getSelectedIndex() != 4) return
+
         let rad = Math.atan2(y-this.y, x-this.x)
         this.weapon.attack(rad)
     }
 
     update(){
-        const speed = 600;
+        // TextBox Apeared
+        if((this.scene as Game).UI.textBox.visible){
+            this.body.setVelocity(0,0)
+            this.image.play('idle', true)
+            return;
+        }
+        
         const vel = new Phaser.Math.Vector2(0,0);
 
         if(this.scene.input.keyboard?.addKey('W')?.isDown){
@@ -55,9 +81,17 @@ export class Player extends Phaser.GameObjects.Container{
         }
         else this.image.play('idle', true)
 
-        vel.scale(speed);
+        vel.scale(this.speed);
         this.setDepth(this.y/7)
 
-        this.body.setVelocity(vel.x, vel.y)
+        if(this.knockback > 0){
+            this.body.setVelocity(this.knockbackDir.x, this.knockbackDir.y)
+            this.body.velocity.normalize().scale(this.knockback*7)
+            this.knockback = Math.floor(this.knockback/2)
+        }
+        else this.body.setVelocity(vel.x, vel.y)
+
+        this.healthBar.setSize(20*this.health/this.maxHealth, 2)
+        this.healthBar.setX(-10-10*this.health/-this.maxHealth)
     }
 }

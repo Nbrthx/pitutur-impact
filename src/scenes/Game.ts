@@ -1,13 +1,19 @@
 import { Player } from '../prefabs/Player';
 import { MapSetup } from '../components/MapSetup';
 import GameUI from './GameUI';
+import { MapCustom } from '../components/MapCustom';
 
 export class Game extends Phaser.Scene {
+
     camera: Phaser.Cameras.Scene2D.Camera;
+    UI: GameUI;
     key: string;
     from: string;
     player: Player;
     fog: Phaser.GameObjects.TileSprite;
+
+    projectiles: Phaser.GameObjects.Group;
+    enemys: Phaser.GameObjects.Group;
 
     constructor ()
     {
@@ -15,7 +21,7 @@ export class Game extends Phaser.Scene {
     }
 
     init(data: { key: string, from: string }){
-        this.key = data.key || 'eling'
+        this.key = data.key || 'lobby'
         this.from = data.from || 'start'
     }
 
@@ -49,33 +55,52 @@ export class Game extends Phaser.Scene {
         this.physics.add.collider(this.player, collision)
         this.player.body.setCollideWorldBounds(true)
 
-        const UI = this.scene.get('GameUI') as GameUI || this.scene.add('GameUI', new GameUI(), true) as GameUI
+        this.enemys = this.physics.add.group({
+            runChildUpdate: true
+        })
 
-        console.log(UI)
+        this.projectiles = this.physics.add.group({
+            runChildUpdate: true
+        })
 
-        this.physics.add.overlap(this.player, enterances, (_player, enterance) => {
+        this.UI = (this.scene.get('GameUI') || this.scene.add('GameUI', new GameUI(), true)) as GameUI
+
+        this.physics.add.overlap(enterances, this.player, enterance => {
             const name = (enterance as Phaser.GameObjects.GameObject).name
             this.scene.start('Game', { key: name, from: this.key })
         })
 
-        this.physics.add.overlap(this.player.weapon.hitbox, npcs, (_player, npc) => {
-            if(UI.textBox.visible) return
-            console.log(npc)
-            const _npc = npc as Phaser.GameObjects.GameObject
-            const npcObj = _npc as Phaser.Physics.Arcade.Sprite
-            if(npcObj.name == 'raden-pramudana'){
-                UI.quest(0)
-                console.log(this.camera.scrollX, this.camera.scrollY)
-                this.camera.stopFollow()
-                this.tweens.add({
-                    targets: this.camera,
-                    scrollX: -this.player.x+npcObj.x,
-                    scrollY: -this.player.y+npcObj.y,
-                    zoom: 1.5,
-                    duration: 1000,
-                    ease: 'Power2'
-                })
-            }
+        this.physics.add.overlap(npcs, this.player.weapon.hitbox, _npc => {
+            if(this.UI.textBox.visible) return
+
+            const npc = _npc as Phaser.Physics.Arcade.Sprite
+
+            this.camera.stopFollow()
+
+            this.tweens.add({
+                targets: this.camera,
+                scrollX: (npc.x-this.camera.centerX)/2,
+                scrollY: (npc.y-this.camera.centerY)/2,
+                zoom: 1.2,
+                duration: 1000,
+                ease: 'Power2'
+            })
+
+            this.UI.quest(npc.name, (key) => {
+                if(key != 'none') this.scene.start('Game', { key: key, from: this.key })
+
+                // this.tweens.add({
+                //     targets: this.camera,
+                //     scrollX: this.player.x-this.camera.centerX,
+                //     scrollY: this.player.y-this.camera.centerY,
+                //     zoom: 1,
+                //     duration: 1000,
+                //     ease: 'Power2',
+                //     onComplete: () => {
+                //         this.camera.startFollow(this.player, true, 0.1, 0.1)
+                //     }
+                // })
+            })
         })
 
         this.input.on('pointerdown', (_pointer: Phaser.Input.Pointer,) => {
@@ -91,6 +116,8 @@ export class Game extends Phaser.Scene {
         this.camera.startFollow(this.player, true, 0.1, 0.1)
         this.camera.setBounds(0, 0, map.widthInPixels*7, map.heightInPixels*7)
         this.physics.world.setBounds(0, 0, map.widthInPixels*7, map.heightInPixels*7)
+
+        new MapCustom(this, this.key, map)
     }
 
     update(){
