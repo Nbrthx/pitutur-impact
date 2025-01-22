@@ -4,16 +4,16 @@ export class Weapon extends Phaser.GameObjects.Container{
     hitbox: Phaser.Physics.Arcade.Body;
     attackState: boolean;
 
-    constructor(scene: Phaser.Scene){
+    constructor(scene: Phaser.Scene, texture: string){
         super(scene);
         scene.add.existing(this);
         
         this.attackState = false
 
-        this.image = scene.add.sprite(6, 0, 'sword')
+        this.image = scene.add.sprite(6, 0, texture)
         this.image.setVisible(false)
         
-        const zone = scene.add.zone(12, 2, 16, 16).setName('sword')
+        const zone = scene.add.zone(12, 2, 16, 16).setName(texture)
         scene.physics.world.enable(zone)
 
         this.hitbox = zone.body as Phaser.Physics.Arcade.Body;
@@ -31,14 +31,13 @@ export class Weapon extends Phaser.GameObjects.Container{
         this.image.setFlipY(this.attackState)
         this.attackState = !this.attackState
 
-        this.image.play('attack')
+        this.image.play(this.image.texture.key == 'sword' ? 'attack' : 'attack-axe')
         this.image.setVisible(true)
         this.setRotation(rad)
 
         let enable = false
         this.image.on('animationupdate', (_animation: any, frame: Phaser.Animations.AnimationFrame) => {
             if(frame.index == 2 && !enable){
-                console.log('attack')
                 enable = true
                 this.hitbox.setEnable(true) 
             }

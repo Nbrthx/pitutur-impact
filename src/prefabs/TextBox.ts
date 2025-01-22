@@ -1,19 +1,23 @@
 export class TextBox extends Phaser.GameObjects.Text {
     private _counter: number = 0;
     private _textToWrite: string = "";
-    private _arrayOfWords: string[] = [];
-    private _wordIndex: number = 0;
+    private _wrapCount: number = 1
     private _textSpeed: number = 20;
     private _timer: Phaser.Time.TimerEvent;
     public onFinished: () => void;
     public onBreak: () => void;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, text: string, style: Phaser.Types.GameObjects.Text.TextStyle) {
-        super(scene, x, y, "", style);
+    constructor(scene: Phaser.Scene, x: number, y: number, text: string) {
+        super(scene, x, y, "", {
+            fontSize: 70, fontFamily: 'PixelFont',
+            color: '#000000',
+            wordWrap: {
+                width: scene.scale.width-scene.scale.width/5,
+                useAdvancedWrap: true
+            }
+        });
         this.setOrigin(0, 0);
         this._textToWrite = text;
-        this._arrayOfWords = text.split(" ");
-        console.log(this._arrayOfWords)
         this._timer = this.scene.time.addEvent({
             delay: this._textSpeed,
             callback: this.typeWriter,
@@ -27,22 +31,8 @@ export class TextBox extends Phaser.GameObjects.Text {
         this.setText(this.text + this._textToWrite[this._counter]);
         this._counter++;
 
-        if(this._textToWrite[this._counter] == ' '){
-            this._wordIndex++;
-            let text = ''
-            this._arrayOfWords.slice(0, this._wordIndex).forEach(v => text += v + " ")
-            if(text.length > 50){
-                this._arrayOfWords.splice(0, this._wordIndex)
-                this.setText(this.text+'\n')
-                this._wordIndex = 0
-                this._counter++
-                this.onBreak()
-            }
-        }
-
-        if(this._textToWrite[this._counter] == '\n'){
-            this._arrayOfWords.splice(0, this._wordIndex)
-            this._wordIndex = 0
+        if(this.getWrappedText().length > this._wrapCount){
+            this._wrapCount++
             this.onBreak()
         }
 
@@ -54,10 +44,9 @@ export class TextBox extends Phaser.GameObjects.Text {
 
     public addText(text: string){
         this.resetCounter()
-        this._wordIndex = 0
         this.setText('')
+        this._wrapCount = 1
         this._textToWrite = text;
-        this._arrayOfWords = text.split(" ");
         this._timer = this.scene.time.addEvent({
             delay: this._textSpeed,
             callback: this.typeWriter,

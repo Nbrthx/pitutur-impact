@@ -1,0 +1,36 @@
+<form id="loginForm">
+    <h1>Login</h1>
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+    <a>Belum punya akun?</a>
+</form>
+<style>
+    *{
+        font-family: 'PixelFont', sans-serif;
+        color: #000000;
+    }
+    #loginForm {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 300px;
+        height: 200px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background: #ffffff;
+        box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+        padding: 0 20px 20px;
+        scale: 2;
+    }
+    #username, #password {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    button {
+        width: 100%;
+    }
+</style>

@@ -32,6 +32,10 @@ export class Preloader extends Scene
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
 
+        // HTML
+        this.load.html('loginform', 'html/loginform.html')
+
+        // Tilemap
         this.load.image('tileset', 'tilemaps.png');
         this.load.image('fog', 'fog.png');
 

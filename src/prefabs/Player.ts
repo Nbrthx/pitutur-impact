@@ -23,7 +23,7 @@ export class Player extends Phaser.GameObjects.Container{
         this.scene = scene
         scene.add.existing(this)
         scene.physics.world.enable(this)
-        this.setScale(7)
+        this.setScale(scene.gameScale)
 
         this.body = this.body as Phaser.Physics.Arcade.Body
         this.body.setSize(10, 10).setOffset(-5, -2)
@@ -35,7 +35,7 @@ export class Player extends Phaser.GameObjects.Container{
 
         this.health = this.maxHealth
 
-        this.weapon = new Weapon(scene)
+        this.weapon = new Weapon(scene, 'sword')
 
         this.add([this.image, this.weapon, bar, this.healthBar])
     }
@@ -43,6 +43,7 @@ export class Player extends Phaser.GameObjects.Container{
     attack(x: number, y: number){
         if(this.scene.UI.textBox.visible) return;
         if(this.scene.UI.inventory.getSelectedIndex() != 4) return
+        if(this.scene.UI.pause) return
 
         let rad = Math.atan2(y-this.y, x-this.x)
         this.weapon.attack(rad)
@@ -82,11 +83,11 @@ export class Player extends Phaser.GameObjects.Container{
         else this.image.play('idle', true)
 
         vel.scale(this.speed);
-        this.setDepth(this.y/7)
+        this.setDepth(this.y/this.scene.gameScale)
 
         if(this.knockback > 0){
             this.body.setVelocity(this.knockbackDir.x, this.knockbackDir.y)
-            this.body.velocity.normalize().scale(this.knockback*7)
+            this.body.velocity.normalize().scale(this.knockback*this.scene.gameScale)
             this.knockback = Math.floor(this.knockback/2)
         }
         else this.body.setVelocity(vel.x, vel.y)
