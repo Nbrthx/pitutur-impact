@@ -1,7 +1,9 @@
 <div class="card">
-    <h1>Login</h1>
-    <button id="submit">Login with Ethereum Wallet</button><br />
-    <a id="change-action">Belum punya akun?</a>
+    <h1>Register</h1>
+    <input id="username" type="text" placeholder="Username">
+    <button id="submit">Connect to Ethereum Wallet</button>
+    <button id="guest">Make Guest Account</button><br />
+    <a id='change-action'>Sudah punya akun?</a>
 </div>
 <style>
     *{
@@ -13,7 +15,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 400px;
+        width: 300px;
         height: 200px;
         border: 1px solid #ccc;
         border-radius: 5px;
@@ -22,8 +24,13 @@
         padding: 0 20px 20px;
         scale: 2;
     }
+    #username, #password {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 10px;
+        box-sizing: border-box;
+    }
     button {
         width: 100%;
-        font-size: 24px;
     }
 </style>

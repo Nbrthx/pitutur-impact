@@ -34,6 +34,7 @@ export class Preloader extends Scene
 
         // HTML
         this.load.html('loginform', 'html/loginform.html')
+        this.load.html('registerform', 'html/registerform.html')
 
         // Tilemap
         this.load.image('tileset', 'tilemaps.png');
