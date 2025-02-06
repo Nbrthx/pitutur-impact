@@ -15,13 +15,6 @@ const config: Types.Core.GameConfig = {
     parent: 'game-container',
     backgroundColor: '#666666',
     pixelArt: true,
-    physics: {
-        default: 'arcade',
-        arcade: {
-            tileBias: 16*7,
-            debug: true
-        }
-    },
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH

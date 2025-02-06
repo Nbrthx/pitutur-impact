@@ -252,6 +252,6 @@ export class Preloader extends Scene
         const mainMenu =  document.getElementById('main-menu')
         if(mainMenu) mainMenu.style.display = 'block'
         
-        this.scene.start('MainMenu');
+        this.scene.start('Game');
     }
 }

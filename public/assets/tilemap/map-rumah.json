@@ -113,59 +113,114 @@
          "name":"collision",
          "objects":[
                 {
-                 "height":29.3333,
+                 "height":16,
                  "id":1,
                  "name":"",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":7.66667,
-                 "x":234.333,
-                 "y":90.6667
+                 "width":8,
+                 "x":236,
+                 "y":92
                 }, 
                 {
-                 "height":17,
+                 "height":16,
                  "id":12,
                  "name":"",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":15.125,
-                 "x":218.625,
-                 "y":105.75
+                 "width":16,
+                 "x":220,
+                 "y":108
                 }, 
                 {
-                 "height":20,
+                 "height":16,
                  "id":14,
                  "name":"",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":15.125,
-                 "x":202.75,
-                 "y":121.375
+                 "width":16,
+                 "x":204,
+                 "y":124
                 }, 
                 {
-                 "height":17.75,
+                 "height":15.625,
                  "id":15,
                  "name":"",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":15.125,
-                 "x":186.875,
-                 "y":137.875
+                 "width":16,
+                 "x":188,
+                 "y":140
                 }, 
                 {
-                 "height":6.75,
+                 "height":4,
                  "id":16,
                  "name":"",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":13.875,
-                 "x":171.625,
-                 "y":153.25
+                 "width":16,
+                 "x":172,
+                 "y":156
+                }, 
+                {
+                 "height":16,
+                 "id":28,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":160,
+                 "x":12,
+                 "y":160
+                }, 
+                {
+                 "height":32,
+                 "id":29,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":12,
+                 "x":0,
+                 "y":128
+                }, 
+                {
+                 "height":80,
+                 "id":30,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":12,
+                 "x":0,
+                 "y":12
+                }, 
+                {
+                 "height":12,
+                 "id":31,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":232,
+                 "x":12,
+                 "y":0
+                }, 
+                {
+                 "height":80,
+                 "id":32,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":12,
+                 "x":244,
+                 "y":12
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -290,10 +345,10 @@
          "y":0
         }],
  "nextlayerid":8,
- "nextobjectid":28,
+ "nextobjectid":33,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.11.0",
+ "tiledversion":"1.11.2",
  "tileheight":16,
  "tilesets":[
         {

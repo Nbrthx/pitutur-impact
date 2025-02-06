@@ -1,3 +1,4 @@
+import planck from "planck-js";
 import { Game } from "../../scenes/Game";
 import { Player } from "../Player";
 import { Weapon } from "../Weapon";
@@ -5,19 +6,20 @@ import { Weapon } from "../Weapon";
 export class Enemy1 extends Phaser.GameObjects.Container{
 
     scene: Game;
-    body: Phaser.Physics.Arcade.Body
+    pBody: planck.Body
     image: Phaser.GameObjects.Sprite;
     nameText: Phaser.GameObjects.Text;
     weapon: Weapon;
-    attackArea: Phaser.Physics.Arcade.Body
+    attackArea: planck.Body
     healthBar: Phaser.GameObjects.Rectangle;
 
-    dir: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
+    dir = new planck.Vec2(0, 0);
     maxHealth: number = 150;
     health: number;
-    speed: number[] = [300, 400];
-    reflectTime: number[] = [200, 400];
-    cooldownTime: number[] = [1000, 1500];
+    speed: number[] = [0.75, 0.95];
+    reflectTime: number[] = [400, 200];
+    cooldownTime: number[] = [1500, 1000];
+    attackKnockback: number = 8;
     damaged: boolean
     targetPlayer: Player
 
@@ -30,11 +32,17 @@ export class Enemy1 extends Phaser.GameObjects.Container{
         
         this.scene = scene
         scene.add.existing(this)
-        scene.physics.world.enable(this)
         this.setScale(scene.gameScale)
 
-        this.body = this.body as Phaser.Physics.Arcade.Body
-        this.body.setSize(10, 10).setOffset(-5, -2)
+        this.pBody = scene.world.createDynamicBody({
+            position: new planck.Vec2(x/scene.gameScale/16, y/scene.gameScale/16+0.2),
+            fixedRotation: true
+        })
+        this.pBody.createFixture({
+            shape: new planck.Box(0.4, 0.3),
+            filterCategoryBits: 2,
+            filterMaskBits: 1,
+        })
 
         this.image = scene.add.sprite(0,0,'enemy')
 
@@ -45,31 +53,36 @@ export class Enemy1 extends Phaser.GameObjects.Container{
         }).setOrigin(0.5, 0.5).setResolution(5)
 
         this.weapon = new Weapon(scene, 'axe')
-        this.weapon.hitbox.setCircle(10, -2, -2)
-        ;(this.weapon.hitbox.gameObject as Phaser.GameObjects.Zone).setPosition(10, 0)
+        this.weapon.hitbox.destroyFixture(this.weapon.hitbox.getFixtureList() as planck.Fixture)
+        this.weapon.hitbox.createFixture({
+            shape: new planck.Circle(new planck.Vec2(0, 0), 10/16),
+            isSensor: true
+        })
 
-        const zone = scene.add.zone(0, 0, 32, 32)
-        scene.physics.world.enable(zone);
-
-        this.attackArea = zone.body as Phaser.Physics.Arcade.Body
-        this.attackArea.setCircle(24, -8, -8)
+        this.attackArea = scene.world.createKinematicBody();
+        this.attackArea.createFixture({
+            shape: new planck.Circle(new planck.Vec2(0, 0), 24/16),
+            isSensor: true
+        });
 
         const bar = scene.add.rectangle(0, -9, 20, 2, 0x777777)
         this.healthBar = scene.add.rectangle(0, -9, 20, 2, 0xff4455)
 
         if(difficulty == 'normal'){
             this.maxHealth = 200
-            this.speed = [350, 450]
-            this.reflectTime = [100, 300]
-            this.cooldownTime = [800, 1200]
+            this.speed = [0.85, 1.05]
+            this.reflectTime = [300, 100]
+            this.cooldownTime = [1200, 800]
+            this.attackKnockback = 9;
             this.stateTime = [3000, 5000, 7000]
             this.nameText.setText('Penebang Pohon Liar lvl.2')
         }
         else if(difficulty == 'hard'){
             this.maxHealth = 250
-            this.speed = [400, 500]
-            this.reflectTime = [100, 200]
-            this.cooldownTime = [600, 1000]
+            this.speed = [1, 1.25]
+            this.reflectTime = [200, 100]
+            this.cooldownTime = [1000, 600]
+            this.attackKnockback = 10;
             this.stateTime = [Math.floor(Math.random()*3000)+2000, 6000, Math.floor(Math.random()*3000)+5000]
             this.eventState = setInterval(() => {
                 this.stateTime = [Math.floor(Math.random()*3000)+3000, 6000, Math.floor(Math.random()*3000)+5000]
@@ -79,22 +92,9 @@ export class Enemy1 extends Phaser.GameObjects.Container{
 
         this.health = this.maxHealth
 
-        this.add([this.image, this.weapon, this.nameText, bar, this.healthBar, zone])
+        this.add([this.image, this.weapon, this.nameText, bar, this.healthBar])
 
         this.changeState()
-    }
-
-    track(player: Player){        
-        const dir = Phaser.Math.Angle.Between(this.x, this.y, player.x, player.y)
-
-        if(Phaser.Math.Distance.BetweenPoints(this, player) > 80){
-            this.dir.x = Math.cos(dir)
-            this.dir.y = Math.sin(dir)
-        }
-        else{
-            this.dir.x = 0
-            this.dir.y = 0
-        }
     }
 
     changeState(){
@@ -113,28 +113,33 @@ export class Enemy1 extends Phaser.GameObjects.Container{
     }
 
     attack(x: number, y: number){
-        if(this.enemyState == 1) return
+        if(this.enemyState == 0) return
 
         let rad = Math.atan2(y-this.y, x-this.x)
         this.weapon.attack(rad)
     }
 
     update(){
-        if(this.targetPlayer) this.track(this.targetPlayer)
+        if(this.targetPlayer){
+            const dir = Phaser.Math.Angle.Between(this.x, this.y, this.targetPlayer.x, this.targetPlayer.y)
+
+            this.dir.x = Math.cos(dir)
+            this.dir.y = Math.sin(dir)
+        }
 
         this.dir.normalize()
 
         if(this.enemyState == 1){
-            this.dir.scale(this.speed[0]);
+            this.dir.mul(this.speed[0]);
         }
         else if(this.enemyState == 2){
-            this.dir.scale(this.speed[1]);
+            this.dir.mul(this.speed[1]);
         }
         else{
-            this.dir.scale(0);
+            this.dir.mul(0);
         }
 
-        if(this.dir.x != 0 || this.dir.y != 0){
+        if(this.pBody.getLinearVelocity().x != 0 || this.pBody.getLinearVelocity().y != 0){
             this.image.play('enemy-run', true)
             if(this.dir.x < 0) this.image.setFlipX(true)
             else this.image.setFlipX(false)
@@ -143,7 +148,21 @@ export class Enemy1 extends Phaser.GameObjects.Container{
 
         this.setDepth(this.y/this.scene.gameScale)
 
-        this.body.setVelocity(this.dir.x, this.dir.y)
+        if(Phaser.Math.Distance.BetweenPoints(this, this.targetPlayer) > 180){
+            this.pBody.setLinearVelocity(this.dir)
+            this.attackArea.setPosition(this.pBody.getPosition())
+        }
+        else{
+            const dir = this.dir.clone()
+            const x = dir.x
+            dir.x = dir.y
+            dir.y = -x
+            dir.normalize()
+            this.pBody.setLinearVelocity(dir)
+        }
+
+        this.x = this.pBody.getPosition().x*this.scene.gameScale*16
+        this.y = (this.pBody.getPosition().y-0.2)*this.scene.gameScale*16
 
         this.healthBar.setSize(20*this.health/this.maxHealth, 2)
         this.healthBar.setX(-10-10*this.health/-this.maxHealth)
@@ -151,6 +170,12 @@ export class Enemy1 extends Phaser.GameObjects.Container{
 
     destroy(): void {
         clearInterval(this.eventState)
+        this.scene.contactEvent.destroyEventByBody(this.attackArea)
+        this.scene.contactEvent.destroyEventByBody(this.pBody)
+        this.scene.world.queueUpdate(world => {
+            console.log(world.destroyBody(this.attackArea))
+            console.log(world.destroyBody(this.pBody))
+        })
         super.destroy()
     }
 }

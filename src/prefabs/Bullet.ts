@@ -1,18 +1,30 @@
 import { Game } from "../scenes/Game";
+import planck from 'planck-js'
 
-export class Bullet extends Phaser.Physics.Arcade.Image {
+export class Bullet extends Phaser.GameObjects.Image {
 
     scene: Game;
-    dir: Phaser.Math.Vector2;
+    dir: planck.Vec2;
     parent: Phaser.GameObjects.Container;
-    knockback: number = 400;
+    pBody: planck.Body
+    knockback: number = 4;
 
     constructor(scene: Game, parent: Phaser.GameObjects.Container, x: number, y: number, char: string | Phaser.Textures.Texture) {
         super(scene, parent.x, parent.y, char);
 
         this.scene = scene
         this.parent = parent
-        this.dir = new Phaser.Math.Vector2(x, y)
+        this.dir = new planck.Vec2(x, y)
+
+        this.pBody = scene.world.createDynamicBody({
+            position: new planck.Vec2(parent.x/scene.gameScale/16, parent.y/scene.gameScale/16),
+            fixedRotation: true
+        })
+        this.pBody.createFixture({
+            shape: new planck.Circle(new planck.Vec2(0,0), 0.1),
+            isSensor: true
+        })
+        this.pBody.setUserData(this)
 
         this.setScale(scene.gameScale)
         
@@ -25,8 +37,19 @@ export class Bullet extends Phaser.Physics.Arcade.Image {
 
     update() {
         if(this.dir.x != 0 || this.dir.y != 0){
-            this.setVelocity(this.dir.x, this.dir.y)
-            this.body?.velocity.normalize().scale(180*this.scene.gameScale)
+            this.pBody.setLinearVelocity(this.dir)
+            this.pBody.getLinearVelocity().normalize()
+            this.pBody.getLinearVelocity().mul(4)
+
+            this.x = this.pBody.getPosition().x * this.scene.gameScale * 16
+            this.y = this.pBody.getPosition().y * this.scene.gameScale * 16
         }
+    }
+
+    destroy(){
+        this.scene.world.queueUpdate(world => {
+            world.destroyBody(this.pBody)
+        })
+        super.destroy()
     }
 }

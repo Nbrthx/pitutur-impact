@@ -239,6 +239,72 @@
         }, 
         {
          "draworder":"topdown",
+         "id":9,
+         "name":"collision",
+         "objects":[
+                {
+                 "height":64,
+                 "id":27,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":28,
+                 "x":0,
+                 "y":12
+                }, 
+                {
+                 "height":12,
+                 "id":28,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":184,
+                 "x":28,
+                 "y":0
+                }, 
+                {
+                 "height":148,
+                 "id":29,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":12,
+                 "x":212,
+                 "y":12
+                }, 
+                {
+                 "height":16,
+                 "id":30,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":184,
+                 "x":28,
+                 "y":160
+                }, 
+                {
+                 "height":48,
+                 "id":31,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":28,
+                 "x":0,
+                 "y":112
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
          "id":4,
          "name":"tree1",
          "objects":[
@@ -379,11 +445,11 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":9,
- "nextobjectid":27,
+ "nextlayerid":10,
+ "nextobjectid":32,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.11.0",
+ "tiledversion":"1.11.2",
  "tileheight":16,
  "tilesets":[
         {

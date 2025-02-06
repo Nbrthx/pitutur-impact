@@ -158,6 +158,61 @@
         }, 
         {
          "draworder":"topdown",
+         "id":8,
+         "name":"collision",
+         "objects":[
+                {
+                 "height":12,
+                 "id":10,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":312,
+                 "x":12,
+                 "y":36
+                }, 
+                {
+                 "height":176,
+                 "id":11,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":12,
+                 "x":0,
+                 "y":48
+                }, 
+                {
+                 "height":12,
+                 "id":12,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":312,
+                 "x":12,
+                 "y":224
+                }, 
+                {
+                 "height":176,
+                 "id":13,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":12,
+                 "x":324,
+                 "y":48
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
          "id":5,
          "locked":true,
          "name":"tree1",
@@ -216,11 +271,11 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":8,
- "nextobjectid":10,
+ "nextlayerid":9,
+ "nextobjectid":14,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.11.0",
+ "tiledversion":"1.11.2",
  "tileheight":16,
  "tilesets":[
         {

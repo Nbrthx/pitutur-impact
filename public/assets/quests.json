@@ -1,18 +1,4 @@
 {
-    "raden-pramudana":{
-        "talk": [
-            "Selamat datang di desa Giri Amerta, Kulo Raden Pramudana penjaga desa ini",
-            "Desa ini menghadapi permasalahan tanah longsor akibat perubahan iklim",
-            "Curah hujan yang tinggi dan dipicu oleh maraknya aksi penebangan pohon di hutan mengakibatkan semakin tingginya kerentanan desa ini terhadap bencana longsor akibat perubahan iklim",
-            "Kita harus senantiasa menjaga dan melestarikan alam semesta ini agar terhindar dari bencana",
-            "Maka terapkanlah pitutur luhur Hamemayu Hayuning Bawana",
-            "Lakukanlah aksi konservasi dengan menanam dan merawat pohon",
-            "Berhati-hatilah dengan serangan musuh penebang pohon liar",
-            "Kamu akan mendapatkan reward: \nkayu 2x / 4x / 6x\nXP 2x / 4x / 6x\n\natas kerja kerasmu menerapkan pitutur luhur ini"
-        ],
-        "key": "kolam"
-    },
-
     "mbah-surakso": {
         "talk": [
             "Selamat datang di desa Banyu Watu, Kulo Mbah Surakso penjaga desa ini",
@@ -24,7 +10,27 @@
             "Dan berhati-hatilah dengan serangan musuh pengeksploitasi air tanah",
             "Kamu akan mendapatkan reward: \npohon 12x / 18x / 24x\nember 60x / 90x / 120x\n\nXP 1x / 2x / 3x\n\natas kerja kerasmu menerapkan pitutur luhur ini"
         ],
+        "complete": [
+            "Selamat! anda telah menyelesaikan misi Eling lan Waspodo"
+        ],
         "key": "hutan"
+    },
+
+    "raden-pramudana":{
+        "talk": [
+            "Selamat datang di desa Giri Amerta, Kulo Raden Pramudana penjaga desa ini",
+            "Desa ini menghadapi permasalahan tanah longsor akibat perubahan iklim",
+            "Curah hujan yang tinggi dan dipicu oleh maraknya aksi penebangan pohon di hutan mengakibatkan semakin tingginya kerentanan desa ini terhadap bencana longsor akibat perubahan iklim",
+            "Kita harus senantiasa menjaga dan melestarikan alam semesta ini agar terhindar dari bencana",
+            "Maka terapkanlah pitutur luhur Hamemayu Hayuning Bawana",
+            "Lakukanlah aksi konservasi dengan menanam dan merawat pohon",
+            "Berhati-hatilah dengan serangan musuh penebang pohon liar",
+            "Kamu akan mendapatkan reward: \nkayu 2x / 4x / 6x\nXP 2x / 4x / 6x\n\natas kerja kerasmu menerapkan pitutur luhur ini"
+        ],
+        "complete": [
+            "Selamat! anda telah menyelesaikan misi Hamemayu Hayuning Bawana"
+        ],
+        "key": "kolam"
     },
     
     "ki-ageng-panjer": {
@@ -37,6 +43,9 @@
             "Berhati-hatilah dengan serangan musuh penimbun bahan bangunan dan logistik",
             "Kamu akan mendapatkan reward: \nXP 2x<\n\natas kerja kerasmu menerapkan pitutur luhur ini"
         ],
-        "key": "none"
+        "complete": [
+            "Selamat! anda telah menyelesaikan misi Rukun Agawe Santosa"
+        ],
+        "key": "rumah"
     }
 }

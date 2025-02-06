@@ -41,7 +41,7 @@ export default class GameUI extends Phaser.Scene {
 
         this.inventory = new Inventory(this, this.scale.width/2 - ((80+10)*2.5-10)*this.uiScale, 1080-100*this.uiScale).setScale(this.uiScale)
         
-        this.inventory.addItem('item-kayu', 0)
+        this.inventory.addItem('item-kayu', 16)
         this.inventory.addItem('item-ember', 80)
         this.inventory.addItem('item-pohon', 16)
         this.inventory.addItem('item-sekop')
@@ -73,34 +73,37 @@ export default class GameUI extends Phaser.Scene {
         })
     }
 
-    quest(index: string, callback: (key: string) => void = () => {}){
+    quest(index: string, isComplete: boolean, callback?: (key: string) => void){
         this.inventory.setVisible(false)
 
         const questData = this.cache.json.get('quest')[index] as {
             talk: string[],
+            complete: string[],
             key: string
         }
+
+        const talk = isComplete ? questData.complete : questData.talk
 
         let counter = 1
         let textBreak = 0
 
         const box = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0xffffff).setOrigin(0).setAlpha(0.8)
-        const text = new TextBox(this, this.scale.width/10, 40, questData.talk[0])
+        const text = new TextBox(this, this.scale.width/10, 40, talk[0])
 
         text.onFinished = () => {
             let btnNext = new Button(this, this.scale.width-this.scale.width/5, this.scale.height/4-100+(Math.max(textBreak, 1)-1)*70, 'Next')
             btnNext.setOrigin(1, 0.5)
 
             btnNext.on("pointerdown", () => {
-                if(counter == questData.talk.length){
+                if(counter == talk.length){
                     this.textBox.removeAll(true)
                     this.textBox.setY(this.scale.height/4*3)
                     this.textBox.setVisible(false)
                     this.inventory.setVisible(true)
-                    this.blackBgTween(questData.key, () => callback(questData.key))
+                    callback && this.blackBgTween(questData.key, () => callback(questData.key))
                 }
                 else{
-                    text.addText(questData.talk[counter])
+                    text.addText(talk[counter])
                     
                     this.textBox.remove(btnNext, true)
                     this.textBox.setY(this.scale.height/4*3)
@@ -108,8 +111,6 @@ export default class GameUI extends Phaser.Scene {
                 }
                 counter++
             })
-
-            console.log(text.getWrappedText())
 
             this.textBox.add(btnNext)
         }

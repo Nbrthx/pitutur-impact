@@ -1,10 +1,13 @@
+import planck from "planck-js";
+import { Game } from "../scenes/Game";
+
 export class Weapon extends Phaser.GameObjects.Container{
 
     image: Phaser.GameObjects.Sprite;
-    hitbox: Phaser.Physics.Arcade.Body;
+    hitbox: planck.Body;
     attackState: boolean;
 
-    constructor(scene: Phaser.Scene, texture: string){
+    constructor(scene: Game, texture: string){
         super(scene);
         scene.add.existing(this);
         
@@ -12,17 +15,15 @@ export class Weapon extends Phaser.GameObjects.Container{
 
         this.image = scene.add.sprite(6, 0, texture)
         this.image.setVisible(false)
-        
-        const zone = scene.add.zone(12, 2, 16, 16).setName(texture)
-        scene.physics.world.enable(zone)
 
-        this.hitbox = zone.body as Phaser.Physics.Arcade.Body;
+        this.hitbox = scene.world.createKinematicBody();
+        this.hitbox.createFixture({
+            shape: new planck.Circle(new planck.Vec2(0, 0), 14/16),
+            isSensor: true
+        });
+        this.hitbox.setActive(false); // Nonaktifkan awal
 
-        this.hitbox.setCircle(14, -6, -6)
-        this.hitbox.setImmovable(true)
-        this.hitbox.setEnable(false)
-
-        this.add([this.image, zone])
+        this.add(this.image)
     }
 
     attack(rad: number){
@@ -39,9 +40,16 @@ export class Weapon extends Phaser.GameObjects.Container{
         this.image.on('animationupdate', (_animation: any, frame: Phaser.Animations.AnimationFrame) => {
             if(frame.index == 2 && !enable){
                 enable = true
-                this.hitbox.setEnable(true) 
+                
+                this.hitbox.setPosition(
+                    new planck.Vec2(
+                        (this.parentContainer.x + Math.cos(rad) * 100)/(this.scene as Game).gameScale/16,
+                        (this.parentContainer.y + Math.sin(rad) * 100)/(this.scene as Game).gameScale/16
+                    )
+                );
+                this.hitbox.setActive(true) 
             }
-            else this.hitbox.setEnable(false)
+            else this.hitbox.setActive(false)
         })
 
         this.image.once('animationcomplete', () => {
