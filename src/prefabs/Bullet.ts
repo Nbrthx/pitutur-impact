@@ -4,16 +4,18 @@ import planck from 'planck-js'
 export class Bullet extends Phaser.GameObjects.Image {
 
     scene: Game;
+    id: number;
     dir: planck.Vec2;
     parent: Phaser.GameObjects.Container;
     pBody: planck.Body
     knockback: number = 4;
 
-    constructor(scene: Game, parent: Phaser.GameObjects.Container, x: number, y: number, char: string | Phaser.Textures.Texture) {
+    constructor(scene: Game, parent: Phaser.GameObjects.Container, x: number, y: number, char: string | Phaser.Textures.Texture, id: number) {
         super(scene, parent.x, parent.y, char);
 
         this.scene = scene
         this.parent = parent
+        this.id = id
         this.dir = new planck.Vec2(x, y)
 
         this.pBody = scene.world.createDynamicBody({
@@ -47,7 +49,7 @@ export class Bullet extends Phaser.GameObjects.Image {
     }
 
     destroy(){
-        this.scene.world.queueUpdate(world => {
+        this.pBody.getWorld().queueUpdate(world => {
             world.destroyBody(this.pBody)
         })
         super.destroy()

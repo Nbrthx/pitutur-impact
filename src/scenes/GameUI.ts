@@ -25,6 +25,7 @@ export default class GameUI extends Phaser.Scene {
     blackBg: Phaser.GameObjects.Rectangle;
     inventory: Inventory;
     pause: boolean
+    pingText: Phaser.GameObjects.Text;
 
     constructor() {
         super('GameUI');
@@ -38,6 +39,8 @@ export default class GameUI extends Phaser.Scene {
 
         this.blackBg = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000)
         .setOrigin(0).setAlpha(0)
+
+        this.pingText = this.add.text(100, 100, '', { fontSize: 30 }).setScrollFactor(0).setDepth(10)
 
         this.inventory = new Inventory(this, this.scale.width/2 - ((80+10)*2.5-10)*this.uiScale, 1080-100*this.uiScale).setScale(this.uiScale)
         

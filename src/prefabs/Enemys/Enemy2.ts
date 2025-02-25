@@ -78,7 +78,7 @@ export class Enemy2 extends Phaser.GameObjects.Container{
         let dirX = Math.cos(rotation)
         let dirY = Math.sin(rotation)
 
-        const bullet = new Bullet(this.scene, this, dirX, dirY, 'bullet')
+        const bullet = new Bullet(this.scene, this, dirX, dirY, 'bullet', Date.now())
         bullet.knockback = 5
 
         this.scene.projectiles.push(bullet.pBody)
@@ -102,7 +102,7 @@ export class Enemy2 extends Phaser.GameObjects.Container{
         clearInterval(this.eventState)
         this.scene.contactEvent.destroyEventByBody(this.pBody)
         this.scene.world.queueUpdate(world => {
-            console.log(world.destroyBody(this.pBody))
+            world.destroyBody(this.pBody)
         })
         super.destroy()
     }

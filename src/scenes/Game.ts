@@ -5,6 +5,11 @@ import { MapCustom } from '../components/MapCustom';
 import planck from 'planck-js'
 import { ContactEvents } from '../components/ContactEvents';
 import { Bullet } from '../prefabs/Bullet';
+import io from 'socket.io-client';
+import { NetworkHandler } from '../components/NetworkHandler';
+import { Entity } from '../prefabs/Entity';
+
+const socket = io('https://3000-idx-pitutur-impact-1734107033891.cluster-qpa6grkipzc64wfjrbr3hsdma2.cloudworkstations.dev/', { transports: ['websocket'] })
 
 export class Game extends Phaser.Scene {
 
@@ -20,12 +25,18 @@ export class Game extends Phaser.Scene {
     fog: Phaser.GameObjects.TileSprite;
 
     projectiles: planck.Body[];
-    enemys: Phaser.GameObjects.Group;
+    enemys: planck.Body[];
     debugGraphics: Phaser.GameObjects.Graphics;
     enterances: planck.Body[];
     npcs: planck.Body[];
     tinyScale: number;
     contactEvent: ContactEvents;
+    attackDir = new planck.Vec2(0, 0)
+
+    others: Player[]
+    networkHandler: NetworkHandler;
+    accumulator: number;
+    previousTime: any;
 
     constructor ()
     {
@@ -33,12 +44,14 @@ export class Game extends Phaser.Scene {
     }
 
     init(data: { key: string, from: string, complete: boolean }){
-        this.key = data.key || 'rumah'
-        this.from = data.from || 'rukun'
+        this.key = data.key || 'lobby'
+        this.from = data.from || 'start'
         this.complete = data.complete
     }
 
     create () {
+        // Map Setup
+
         this.world = new planck.World()
 
         this.debugGraphics = this.add.graphics().setDepth(10000000)
@@ -53,6 +66,7 @@ export class Game extends Phaser.Scene {
         const wall = map.createLayer('wall', tileset, 0, 0) as Phaser.Tilemaps.TilemapLayer
         bg.setScale(this.gameScale)
         wall.setScale(this.gameScale).setCollisionByExclusion([-1])
+        this.createBounds(map.widthInPixels, map.heightInPixels)
 
         this.fog = this.add.tileSprite(0, 0, map.widthInPixels*4, map.heightInPixels*4, 'fog')
         this.fog.setAlpha(0.05).setDepth(100000).setScale(15).setScrollFactor(0.6)
@@ -60,27 +74,31 @@ export class Game extends Phaser.Scene {
         MapSetup.getObjects(this, map)
 
         this.enterances = MapSetup.getEnterances(this, map)
-
-        const enterPoint = MapSetup.getEnterPoint(this.from, map)
         
         this.npcs = MapSetup.getNPCs(this, map)
+        
+        const enterPoint = MapSetup.getEnterPoint(this.from, map)
 
         this.player = new Player(this, enterPoint.x, enterPoint.y)
 
-        this.enemys = this.add.group({
-            runChildUpdate: true
-        })
+        this.enemys = []
+
+        this.others = []
 
         this.projectiles = []
 
         this.UI = (this.scene.get('GameUI') || this.scene.add('GameUI', new GameUI(), true)) as GameUI
 
-        this.input.on('pointerdown', (_pointer: Phaser.Input.Pointer,) => {
-            this.player.attack(_pointer.worldX, _pointer.worldY)
-            let bodys = []
-            for (let body = this.world.getBodyList(); body; body = body.getNext()) bodys.push(body)
-                console.log(bodys)
+        this.input.on('pointerdown', (_pointer: Phaser.Input.Pointer) => {
+            if(this.UI.textBox.visible) return;
+            if(this.UI.pause) return
+
+            let x = _pointer.worldX-this.player.x
+            let y = _pointer.worldY-this.player.y
+            this.attackDir.set(x, y)
         })
+
+        // Custom Popup
 
         if(this.complete && this.key == 'eling'){
             this.UI.quest('raden-pramudana', true)
@@ -96,11 +114,11 @@ export class Game extends Phaser.Scene {
         
         this.camera.startFollow(this.player, true, 0.1, 0.1)
         this.camera.setBounds(0, 0, map.widthInPixels*this.gameScale, map.heightInPixels*this.gameScale)
-        this.createBounds(map.widthInPixels, map.heightInPixels)
+
+        
+        // Physics Contact Event
 
         this.contactEvent = new ContactEvents(this.world)
-
-        new MapCustom(this, this.key, map)
         
         this.contactEvent.addEvent(this.enterances, this.player.pBody, (enterance) => {
             console.log('Entering!');
@@ -144,22 +162,99 @@ export class Game extends Phaser.Scene {
                 // })
             })
         })
-    }
 
-    update(){
-        this.world.step(1/20)
+        // Connection
 
-        this.player.update()
+        this.networkHandler = new NetworkHandler(this, socket, this.key, this.from)
 
-        this.projectiles.forEach(v => {
-            const bullet = v.getUserData() as Bullet
-            bullet && bullet.active && bullet.update()
+        this.events.once('shutdown', () => {
+            console.log('shutdown')
+            this.networkHandler.socket.removeAllListeners()
         })
 
-        this.fog.tilePositionX += 0.08
-        this.fog.tilePositionY += 0.02
+        // Custom Map
 
-        this.createDebugGraphics()
+        new MapCustom(this, this.key, map)
+
+        // world step timer
+
+        this.accumulator = 0
+        this.previousTime = performance.now()
+    }
+
+    update(currentTime: number){
+        const frameTime = (currentTime - this.previousTime) / 1000; // in seconds
+        this.previousTime = currentTime;
+        this.accumulator += frameTime * 3;
+        while (this.accumulator >= 1/20) {
+            this.world.step(1/20);
+            this.accumulator -= 1/20;
+
+            this.player.update()
+            
+            this.others.forEach(v => {
+                v && v.update()
+            })
+
+            this.enemys.forEach(v => {
+                const enemy = v.getUserData() as Entity
+                enemy && enemy.active && enemy.update()
+            })
+
+            this.projectiles.forEach(v => {
+                const bullet = v.getUserData() as Bullet
+                bullet && bullet.active && bullet.update()
+            })
+
+            this.handleInput()
+
+            this.fog.tilePositionX += 0.08
+            this.fog.tilePositionY += 0.02
+
+            this.createDebugGraphics()
+        }
+    }
+
+    handleInput(){
+        const vel = new planck.Vec2()
+
+        // TextBox Apeared
+        if(this.UI.textBox.visible){
+            this.player.pBody.setLinearVelocity(vel)
+            return;
+        }
+
+        const input = {
+            up: this.input.keyboard?.addKey('W')?.isDown,
+            down: this.input.keyboard?.addKey('S')?.isDown,
+            left: this.input.keyboard?.addKey('A')?.isDown,
+            right: this.input.keyboard?.addKey('D')?.isDown
+        }
+    
+        if(input.up){
+            vel.y = -1;
+        }
+        if(input.down){
+            vel.y = 1;
+        }
+        if(input.left){
+            vel.x = -1;
+        }
+        if(input.right){
+            vel.x = 1;
+        }
+        
+        vel.normalize();
+
+        this.networkHandler.emitInput({ dir: vel, item: this.UI.inventory.getSelectedIndex(), attackDir: this.attackDir })
+
+        if(this.attackDir.length() > 0){
+            if(this.UI.inventory.getSelectedIndex() == 4) this.player.attack(this.attackDir.x, this.attackDir.y)
+            this.attackDir.set(0, 0)
+        }
+
+        vel.mul(this.player.speed);
+        this.player.pBody.setLinearVelocity(vel)
     }
     
     createBounds(width: number, height: number){
@@ -178,15 +273,22 @@ export class Game extends Phaser.Scene {
         });
     };
 
-    // Untuk debugging hitbox
+    // For debugging hitbox
     createDebugGraphics() {
         this.debugGraphics.clear()
 
         for (let body = this.world.getBodyList(); body; body = body.getNext()) {
-            if(!body.isActive()) continue
             const position = body.getPosition();
             const angle = body.getAngle();
-            const color = body.getType() == planck.Body.KINEMATIC ? 0xffff00 : (body.getType() == planck.Body.DYNAMIC ? 0x00ffff : 0x0000ff);
+
+            let color: number = 0x999999
+            switch(body.getType()){
+                case planck.Body.KINEMATIC: color = 0xffff00; break;
+                case planck.Body.DYNAMIC: color = 0x00ffff; break;
+                case planck.Body.STATIC: color = 0x0000ff; 
+            }
+            color = body.isActive() ? color : 0x999999
+
             this.debugGraphics.lineStyle(2, color, 1);
             for (let fixture = body.getFixtureList(); fixture; fixture = fixture.getNext()) {
                 const shape = fixture.getShape();

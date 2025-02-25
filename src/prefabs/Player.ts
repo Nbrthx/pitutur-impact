@@ -28,11 +28,11 @@ export class Player extends Phaser.GameObjects.Container{
         this.image = scene.add.sprite(0,0,'char')
 
         this.pBody = scene.world.createDynamicBody({
-            position: new planck.Vec2(x/scene.gameScale/16, y/scene.gameScale/16+0.2),
+            position: new planck.Vec2(x/scene.gameScale/16, y/scene.gameScale/16),
             fixedRotation: true
         })
         this.pBody.createFixture({
-            shape: new planck.Box(0.4, 0.3),
+            shape: new planck.Box(0.4, 0.3, new planck.Vec2(0, 0.2)),
             filterCategoryBits: 2,
             filterMaskBits: 1,
         })
@@ -42,69 +42,45 @@ export class Player extends Phaser.GameObjects.Container{
 
         this.health = this.maxHealth
 
-        this.weapon = new Weapon(scene, 'sword')
+        this.weapon = new Weapon(scene, this.pBody, 'sword')
 
         this.add([this.image, this.weapon, bar, this.healthBar])
     }
 
     attack(x: number, y: number){
-        if(this.scene.UI.textBox.visible) return;
-        if(this.scene.UI.inventory.getSelectedIndex() != 4) return
-        if(this.scene.UI.pause) return
-        if(this.knockback > 0) return
+        // if(this.knockback > 0) return
 
-        let rad = Math.atan2(y-this.y, x-this.x)
+        let rad = Math.atan2(y, x)
         this.weapon.attack(rad)
     }
 
     update(){
-        // TextBox Apeared
-        if((this.scene as Game).UI.textBox.visible){
-            this.pBody.setLinearVelocity(new planck.Vec2(0, 0))
-            this.image.play('idle', true)
-            return;
-        }
-        
-        const vel = new planck.Vec2(0, 0)
-
-        if(this.scene.input.keyboard?.addKey('W')?.isDown){
-            vel.y = -1;
-        }
-        if(this.scene.input.keyboard?.addKey('S')?.isDown){
-            vel.y = 1;
-        }
-        if(this.scene.input.keyboard?.addKey('A')?.isDown){
-            this.image.setFlipX(true)
-            vel.x = -1;
-        }
-        if(this.scene.input.keyboard?.addKey('D')?.isDown){
-            this.image.setFlipX(false)
-            vel.x = 1;
-        }
-
-        vel.normalize();
+        const vel = this.pBody.getLinearVelocity()
 
         if(vel.x != 0 || vel.y != 0){
             if(vel.y >= 0) this.image.play('run-down', true)
             else this.image.play('run-up', true)
+        
+            if(vel.x > 0) this.image.flipX = false
+            else if(vel.x < 0) this.image.flipX = true
         }
         else this.image.play('idle', true)
 
-        vel.mul(this.speed);
         this.setDepth(this.y/this.scene.gameScale)
 
-        if(this.knockback > 0){
-            this.pBody.setLinearVelocity(this.knockbackDir)
-            this.pBody.getLinearVelocity().normalize()
-            this.pBody.getLinearVelocity().mul(this.knockback)
-            this.knockback = Math.floor(this.knockback*150/4)/50
-        }
-        else this.pBody.setLinearVelocity(vel) //this.body.setVelocity(vel.x, vel.y)
-
         this.x = this.pBody.getPosition().x*this.scene.gameScale*16
-        this.y = (this.pBody.getPosition().y-0.2)*this.scene.gameScale*16
+        this.y = this.pBody.getPosition().y*this.scene.gameScale*16
 
         this.healthBar.setSize(20*this.health/this.maxHealth, 2)
         this.healthBar.setX(-10-10*this.health/-this.maxHealth)
+    }
+
+    destroy(){
+        this.scene.contactEvent.destroyEventByBody(this.pBody)
+        this.pBody.getWorld().queueUpdate(world => {
+            world.destroyBody(this.pBody)
+            this.weapon.destroy()
+        })
+        super.destroy()
     }
 }

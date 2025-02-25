@@ -3,12 +3,15 @@ import { Game } from "../scenes/Game";
 
 export class Weapon extends Phaser.GameObjects.Container{
 
+    scene: Game
     image: Phaser.GameObjects.Sprite;
     hitbox: planck.Body;
+    parentBody: planck.Body
     attackState: boolean;
 
-    constructor(scene: Game, texture: string){
+    constructor(scene: Game, parentBody: planck.Body, texture: string){
         super(scene);
+        this.scene = scene
         scene.add.existing(this);
         
         this.attackState = false
@@ -16,12 +19,16 @@ export class Weapon extends Phaser.GameObjects.Container{
         this.image = scene.add.sprite(6, 0, texture)
         this.image.setVisible(false)
 
+        this.parentBody = parentBody
+
         this.hitbox = scene.world.createKinematicBody();
         this.hitbox.createFixture({
             shape: new planck.Circle(new planck.Vec2(0, 0), 14/16),
             isSensor: true
         });
         this.hitbox.setActive(false); // Nonaktifkan awal
+
+
 
         this.add(this.image)
     }
@@ -43,8 +50,8 @@ export class Weapon extends Phaser.GameObjects.Container{
                 
                 this.hitbox.setPosition(
                     new planck.Vec2(
-                        (this.parentContainer.x + Math.cos(rad) * 100)/(this.scene as Game).gameScale/16,
-                        (this.parentContainer.y + Math.sin(rad) * 100)/(this.scene as Game).gameScale/16
+                        (this.parentBody.getPosition().x + Math.cos(rad) * 0.75),
+                        (this.parentBody.getPosition().y + Math.sin(rad) * 0.75)
                     )
                 );
                 this.hitbox.setActive(true) 
@@ -55,5 +62,13 @@ export class Weapon extends Phaser.GameObjects.Container{
         this.image.once('animationcomplete', () => {
             this.image.setVisible(false)
         })
+    }
+
+    destroy(){
+        this.scene.contactEvent.destroyEventByBody(this.hitbox)
+        this.hitbox.getWorld().queueUpdate(world => {
+            world.destroyBody(this.hitbox)
+        })
+        super.destroy()
     }
 }

@@ -1,4 +1,3 @@
-import { Bullet } from "../prefabs/Bullet";
 import { Enemy0 } from "../prefabs/Enemys/Enemy0"
 import { Enemy1 } from "../prefabs/Enemys/Enemy1"
 import { Enemy2 } from "../prefabs/Enemys/Enemy2";
@@ -31,69 +30,45 @@ export class MapCustom{
         const embung = map.createLayer('embung', tileset, 0, 0) as Phaser.Tilemaps.TilemapLayer
         embung.setScale(this.gameScale)
 
-        this.scene.input.on('pointerdown', () => {
-            if(this.scene.UI.inventory.getSelectedIndex() == 3){
-                const x = this.scene.player.x
-                const y = this.scene.player.y
-                
-                for(let i=0; i<4; i++){
-                    let sideX = i % 2 == 0 ? x-8*this.gameScale : x+8*this.gameScale
-                    let sideY = i < 2 ? y-8*this.gameScale : y+8*this.gameScale
-
-                    if(embung.hasTileAtWorldXY(sideX, sideY)){
-                        embung.removeTileAtWorldXY(sideX, sideY)
-                        addCounter()
-                    }
-                }
+        this.scene.networkHandler.handleAddCounter1 = (index) => {
+            let sideX = (index%18+2)*this.gameScale*16
+            let sideY = (Math.floor(index/18)+3)*this.gameScale*16
+            if(embung.hasTileAtWorldXY(sideX, sideY)){
+                embung.removeTileAtWorldXY(sideX, sideY)
             }
-        })
+        }
+        
+        this.scene.networkHandler.handleComplete = () => {
+            if(enemy.active) enemy.destroy()
 
-        const addCounter = () => {
-            this.counter++
-            if(this.counter == 1){
-                // 'Kamu juga bisa mengalahkan musuh terlebih dahulu'
-            }
-            if(this.counter >= 198){
-                if(enemy.active) enemy.destroy()
-
-                this.scene.UI.blackBgTween('eling', () => {
-                    this.scene.projectiles.forEach(v => {
-                        this.scene.world.destroyBody(v)
-                    })
-                    this.scene.scene.start('Game', { from: 'kolam', key: 'eling', complete: true })
+            this.scene.UI.blackBgTween('eling', () => {
+                this.scene.projectiles.forEach(v => {
+                    this.scene.world.destroyBody(v)
                 })
+                this.scene.scene.start('Game', { from: 'kolam', key: 'eling', complete: true })
+            })
 
-                // let reward = [12, 60, 1]
-                // if(this.difficulty == 'normal') reward = [18, 90, 2]
-                // else if(this.difficulty == 'hard') reward = [24, 90, 3]
-                
-                // Popup.misionComplete('Misi "Eling lan Waspodo" Selesai', 'Item yang didapat: pohon <b>'+reward[0]+'x</b>, ember <b>'+reward[1]+'x</b>, XP <b>'+reward[2]+'x</b>')
-                // this.inventory.addItem('pohon', reward[0])
-                // this.inventory.addItem('ember', reward[1])
-                // this.stats.addXp(reward[2])
-            }
+            // let reward = [12, 60, 1]
+            // if(this.difficulty == 'normal') reward = [18, 90, 2]
+            // else if(this.difficulty == 'hard') reward = [24, 90, 3]
+            
+            // Popup.misionComplete('Misi "Eling lan Waspodo" Selesai', 'Item yang didapat: pohon <b>'+reward[0]+'x</b>, ember <b>'+reward[1]+'x</b>, XP <b>'+reward[2]+'x</b>')
+            // this.inventory.addItem('pohon', reward[0])
+            // this.inventory.addItem('ember', reward[1])
+            // this.stats.addXp(reward[2])
         }
 
         // Enemy
-        const enemy = new Enemy0(this.scene, 1000, 800, 'easy').setScale(this.gameScale)
-        enemy.shoter(this.scene.player)
-
-        this.scene.enemys.add(enemy)
+        const enemy = new Enemy0(this.scene, 1000, 800).setScale(this.gameScale)
+        enemy.trackPlayer = this.scene.player
+        this.scene.enemys.push(enemy.pBody)
 
         this.scene.contactEvent.addEvent(this.scene.projectiles, this.scene.player.pBody, (_bullet) => {
             console.log(_bullet)
             if(!this.scene.player.damaged){
                 this.scene.player.damaged = true
                 console.log('Shoted')
-                this.scene.player.health -= 5
                 this.scene.sound.play('hit')
-
-                const bullet = _bullet.getUserData() as Bullet
-                this.scene.player.knockbackDir.x = bullet.dir.x ?? 0
-                this.scene.player.knockbackDir.y = bullet.dir.y ?? 0
-                this.scene.player.knockback = bullet.knockback
-
-                console.log(this.scene.player.knockback, bullet)
                 
                 this.scene.tweens.add({
                     targets: this.scene.player.image,
@@ -112,17 +87,16 @@ export class MapCustom{
                 else setTimeout(() => this.scene.player.damaged = false, 300)
             }
         })
-        this.scene.contactEvent.addEvent(this.scene.player.weapon.hitbox, enemy.pBody, () => {
+        this.scene.networkHandler.handleEnemyHealthChange = () => {
             if(!enemy.damaged){
                 enemy.damaged = true
-                enemy.health -= 5
                 this.scene.sound.play('hit', { volume: 0.5 })
 
-                let x = (Math.floor(Math.random()*16*11)+16*6)/16
-                let y = (Math.floor(Math.random()*16*5)+16*6)/16
-                this.scene.world.queueUpdate(() => {
-                    enemy.pBody.setPosition(new planck.Vec2(x, y))
-                })
+                // let x = (Math.floor(Math.random()*16*11)+16*6)/16
+                // let y = (Math.floor(Math.random()*16*5)+16*6)/16
+                // this.scene.world.queueUpdate(() => {
+                //     enemy.pBody.setPosition(new planck.Vec2(x, y))
+                // })
                 
                 this.scene.tweens.add({
                     targets: enemy.image,
@@ -132,16 +106,15 @@ export class MapCustom{
                     repeat: 1,
                     yoyo: true
                 })
-
-                if(enemy.health <= 0){
-                    // if(this.difficulty == 'easy') this.outfit.addOutfit('outfit', 'women-purple')
-                    // else if(this.difficulty == 'normal') this.outfit.addOutfit('outfit', 'brown')
-                    // else if(this.difficulty == 'hard') this.outfit.addOutfit('outfit', 'gold')
-                    enemy.destroy()
-                }
-                else setTimeout(() => enemy.damaged = false, 300)
             }
-        })
+            if(enemy.health <= 0){
+                // if(this.difficulty == 'easy') this.outfit.addOutfit('outfit', 'women-purple')
+                // else if(this.difficulty == 'normal') this.outfit.addOutfit('outfit', 'brown')
+                // else if(this.difficulty == 'hard') this.outfit.addOutfit('outfit', 'gold')
+                enemy.destroy()
+            }
+            else setTimeout(() => enemy.damaged = false, 300)
+        }
     }
 
     mapHutan(map: Phaser.Tilemaps.Tilemap){
@@ -153,21 +126,19 @@ export class MapCustom{
             growTrees.push(growTree.pBody)
         })
 
-        this.scene.input.on('pointerdown', () => {
-            if(this.scene.UI.inventory.getSelectedIndex() == 2){
-                const growTree = this.scene.player.pBody.getContactList()?.other?.getUserData()
-                if(growTree instanceof GrowTree && !growTree.planted && this.scene.UI.inventory.useItem(2)){
-                    growTree.plant()
-                }
+        this.scene.networkHandler.handlePlanting = (id) => {
+            const growTree = growTrees.find(v => (v.getUserData() as GrowTree).id == id)?.getUserData()
+            if(growTree instanceof GrowTree && !growTree.planted && this.scene.UI.inventory.useItem(2)){
+                growTree.plant()
             }
-            else if(this.scene.UI.inventory.getSelectedIndex() == 1){
-                const growTree = this.scene.player.pBody.getContactList()?.other?.getUserData()
-                if(growTree instanceof GrowTree && !growTree.complete && this.scene.UI.inventory.useItem(1)){
-                    growTree.grow()
-                    growTree.complete && addCounter()
-                }
+        }
+        this.scene.networkHandler.handleGrowing = (id) => {
+            const growTree = growTrees.find(v => (v.getUserData() as GrowTree).id == id)?.getUserData()
+            if(growTree instanceof GrowTree && !growTree.complete && this.scene.UI.inventory.useItem(1)){
+                growTree.grow()
+                growTree.complete && addCounter()
             }
-        })
+        }
 
         const addCounter = () => {
             this.counter++
@@ -181,27 +152,11 @@ export class MapCustom{
         }
 
         // Enemy
-        const enemy = new Enemy1(this.scene, 800, 800, 'easy').setScale(this.gameScale)
-        enemy.targetPlayer = this.scene.player
-        this.scene.enemys.add(enemy)
+        const enemy = new Enemy1(this.scene, 800, 800).setScale(this.gameScale)
+        enemy.isWalk = true
+        enemy.trackPlayer = this.scene.player
+        this.scene.enemys.push(enemy.pBody)
 
-        this.scene.contactEvent.addEvent(this.scene.player.pBody, enemy.attackArea, () => {
-            console.log('attack area')
-            if(enemy.attackArea.isActive()){
-                const { x, y } = this.scene.player
-                let reflectTime = enemy.reflectTime
-                let cooldownTime = enemy.cooldownTime
-
-                setTimeout(() => {
-                    enemy && enemy.active && enemy.attack(x, y)
-                }, enemy.enemyState == 2 ? reflectTime[1] : reflectTime[0])
-
-                this.scene.world.queueUpdate(() => {
-                    enemy.attackArea.setActive(false)
-                })
-                setTimeout(() => enemy.attackArea && enemy.attackArea.setActive(true), enemy.enemyState == 2 ? cooldownTime[1] : cooldownTime[0])
-            }
-        })
         this.scene.contactEvent.addEvent(this.scene.player.pBody, enemy.weapon.hitbox, () => {
             if(!this.scene.player.damaged){
                 this.scene.player.damaged = true
@@ -229,10 +184,9 @@ export class MapCustom{
                 else setTimeout(() => this.scene.player.damaged = false, 300)
             }
         })
-        this.scene.contactEvent.addEvent(enemy.pBody, this.scene.player.weapon.hitbox, () => {
+        this.scene.networkHandler.handleEnemyHealthChange = () => {
             if(!enemy.damaged){
                 enemy.damaged = true
-                enemy.health -= 5
                 // this.sound.play('hit', { volume: 0.5 })
 
                 this.scene.tweens.add({
@@ -243,16 +197,15 @@ export class MapCustom{
                     repeat: 1,
                     yoyo: true
                 })
-
-                if(enemy.health <= 0){
-                    // if(this.difficulty == 'easy') this.outfit.addOutfit('head', 'women-purple')
-                    // else if(this.difficulty == 'normal') this.outfit.addOutfit('head', 'brown')
-                    // else if(this.difficulty == 'hard') this.outfit.addOutfit('outfit', 'dark')
-                    enemy.destroy()
-                }
-                else setTimeout(() => enemy.damaged = false, 300)
             }
-        })
+            if(enemy.health <= 0){
+                // if(this.difficulty == 'easy') this.outfit.addOutfit('head', 'women-purple')
+                // else if(this.difficulty == 'normal') this.outfit.addOutfit('head', 'brown')
+                // else if(this.difficulty == 'hard') this.outfit.addOutfit('outfit', 'dark')
+                enemy.destroy()
+            }
+            else setTimeout(() => enemy.damaged = false, 300)
+        }
     }
 
     mapRumah(map: Phaser.Tilemaps.Tilemap){
@@ -285,66 +238,65 @@ export class MapCustom{
         // Enemy
         const enemy = new Enemy2(this.scene, 1000, 800).setScale(this.gameScale)
 
-        this.scene.enemys.add(enemy)
-        /*
-        this.scene.physics.add.overlap(this.scene.player, this.scene.projectiles, (_player, _bullet) => {
-            if(!this.scene.player.damaged){
-                this.scene.player.damaged = true
-                console.log('Shoted')
-                this.scene.player.health -= 5
-                this.scene.sound.play('hit')
+        this.scene.enemys.push(enemy.pBody)
+        
+    //     this.scene.physics.add.overlap(this.scene.player, this.scene.projectiles, (_player, _bullet) => {
+    //         if(!this.scene.player.damaged){
+    //             this.scene.player.damaged = true
+    //             console.log('Shoted')
+    //             this.scene.player.health -= 5
+    //             this.scene.sound.play('hit')
 
-                let bullet = _bullet as Bullet
-                this.scene.player.knockbackDir.x = bullet.body?.velocity.x ?? 0
-                this.scene.player.knockbackDir.y = bullet.body?.velocity.y ?? 0
-                this.scene.player.knockback = bullet.knockback
+    //             let bullet = _bullet as Bullet
+    //             this.scene.player.knockbackDir.x = bullet.body?.velocity.x ?? 0
+    //             this.scene.player.knockbackDir.y = bullet.body?.velocity.y ?? 0
+    //             this.scene.player.knockback = bullet.knockback
 
-                console.log(this.scene.player.knockback, bullet)
+    //             console.log(this.scene.player.knockback, bullet)
                 
-                this.scene.tweens.add({
-                    targets: this.scene.player.image,
-                    duration: 50,
-                    ease: 'ease-in-out',
-                    alpha: 0,
-                    repeat: 1,
-                    yoyo: true
-                })
+    //             this.scene.tweens.add({
+    //                 targets: this.scene.player.image,
+    //                 duration: 50,
+    //                 ease: 'ease-in-out',
+    //                 alpha: 0,
+    //                 repeat: 1,
+    //                 yoyo: true
+    //             })
 
-                if(this.scene.player.health <= 0){ 
-                    this.scene.UI.blackBgTween('eling', () => {
-                        this.scene.scene.start('Game', { from: 'kolam', key: 'eling' })
-                    })
-                }
-                else setTimeout(() => this.scene.player.damaged = false, 300)
-            }
-        })
-        this.scene.physics.add.overlap(this.scene.player.weapon.hitbox, enemy, () => {
-            if(!enemy.damaged){
-                enemy.damaged = true
-                enemy.health -= 5
-                this.scene.sound.play('hit', { volume: 0.5 })
+    //             if(this.scene.player.health <= 0){ 
+    //                 this.scene.UI.blackBgTween('eling', () => {
+    //                     this.scene.scene.start('Game', { from: 'kolam', key: 'eling' })
+    //                 })
+    //             }
+    //             else setTimeout(() => this.scene.player.damaged = false, 300)
+    //         }
+    //     })
+    //     this.scene.physics.add.overlap(this.scene.player.weapon.hitbox, enemy, () => {
+    //         if(!enemy.damaged){
+    //             enemy.damaged = true
+    //             enemy.health -= 5
+    //             this.scene.sound.play('hit', { volume: 0.5 })
 
-                enemy.x = (Math.floor(Math.random()*16*17)+16*3)*this.gameScale
-                enemy.y = (Math.floor(Math.random()*16*9)+16*4)*this.gameScale
+    //             enemy.x = (Math.floor(Math.random()*16*17)+16*3)*this.gameScale
+    //             enemy.y = (Math.floor(Math.random()*16*9)+16*4)*this.gameScale
 
-                this.scene.tweens.add({
-                    targets: enemy.image,
-                    duration: 50,
-                    ease: 'ease-in-out',
-                    alpha: 0,
-                    repeat: 1,
-                    yoyo: true
-                })
+    //             this.scene.tweens.add({
+    //                 targets: enemy.image,
+    //                 duration: 50,
+    //                 ease: 'ease-in-out',
+    //                 alpha: 0,
+    //                 repeat: 1,
+    //                 yoyo: true
+    //             })
 
-                if(enemy.health <= 0){
-                    // if(this.difficulty == 'easy') this.outfit.addOutfit('outfit', 'women-purple')
-                    // else if(this.difficulty == 'normal') this.outfit.addOutfit('outfit', 'brown')
-                    // else if(this.difficulty == 'hard') this.outfit.addOutfit('outfit', 'gold')
-                    enemy.destroy()
-                }
-                else setTimeout(() => enemy.damaged = false, 300)
-            }
-        })
-        */
+    //             if(enemy.health <= 0){
+    //                 // if(this.difficulty == 'easy') this.outfit.addOutfit('outfit', 'women-purple')
+    //                 // else if(this.difficulty == 'normal') this.outfit.addOutfit('outfit', 'brown')
+    //                 // else if(this.difficulty == 'hard') this.outfit.addOutfit('outfit', 'gold')
+    //                 enemy.destroy()
+    //             }
+    //             else setTimeout(() => enemy.damaged = false, 300)
+    //         }
+    //     })
     }
 }
